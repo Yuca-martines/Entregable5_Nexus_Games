@@ -60,6 +60,8 @@ export default function CartDrawer() {
       return;
     }
 
+    const metodoPago = PAYMENT_METHODS.find((m) => m.id === selectedPayment)?.label || 'Tarjeta de Crédito / PSE';
+
     setIsProcessing(true);
     setSaleError(null);
 
