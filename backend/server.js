@@ -65,7 +65,7 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar Servidor
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
   console.log(`🚀 SERVIDOR BACKEND ACTIVO EN: http://localhost:${PORT}`);
   console.log(`📦 Base de Datos SQL: SQLite (Lista para Entrega)`);
