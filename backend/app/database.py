@@ -8,15 +8,24 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./database/database.sqlite")
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-# Asegurar que rutas relativas de SQLite apunten siempre a la carpeta backend/database
-if DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith("sqlite:////") and ":\\" not in DATABASE_URL:
+# Si no hay DATABASE_URL definida, usar SQLite con ruta absoluta relativa al proyecto
+if not DATABASE_URL:
+    # Ruta absoluta: /app/database/database.sqlite dentro del contenedor Docker
+    db_dir = BASE_DIR / "database"
+    db_dir.mkdir(parents=True, exist_ok=True)
+    db_path = db_dir / "database.sqlite"
+    DATABASE_URL = f"sqlite:///{db_path.as_posix()}"
+
+# Si DATABASE_URL viene de una variable de entorno con ruta relativa sqlite, resolverla en absoluta
+elif DATABASE_URL.startswith("sqlite:///") and not DATABASE_URL.startswith("sqlite:////"):
     rel_path = DATABASE_URL.replace("sqlite:///", "")
-    abs_db_path = (BASE_DIR / rel_path).resolve()
-    # Asegurar que el directorio de la BD exista
-    abs_db_path.parent.mkdir(parents=True, exist_ok=True)
-    DATABASE_URL = f"sqlite:///{abs_db_path.as_posix()}"
+    if not os.path.isabs(rel_path):
+        abs_db_path = (BASE_DIR / rel_path).resolve()
+        abs_db_path.parent.mkdir(parents=True, exist_ok=True)
+        DATABASE_URL = f"sqlite:///{abs_db_path.as_posix()}"
+
 
 # Configurar motor SQLAlchemy
 connect_args = {}
