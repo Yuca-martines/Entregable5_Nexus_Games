@@ -31,7 +31,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Puerto dinámico por defecto (Railway inyectará su propio $PORT)
-ENV PORT=80
+ENV PORT=8080
 
 # Copiar el template de configuración de Nginx (sustituye ${PORT} automáticamente al iniciar)
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
@@ -39,7 +39,7 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # Copiar los archivos estáticos compilados desde la etapa de builder
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 8080
 
 # Nginx iniciará automáticamente sustituyendo las variables en el template
 CMD ["nginx", "-g", "daemon off;"]
