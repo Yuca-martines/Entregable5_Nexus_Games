@@ -8,8 +8,22 @@
 ![SQLAlchemy](https://img.shields.io/badge/ORM-SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white)
 ![SQLite](https://img.shields.io/badge/Database-SQLite%203-003B57?logo=sqlite&logoColor=white)
 ![JWT](https://img.shields.io/badge/Auth-JWT%20Bcrypt-black?logo=jsonwebtokens&logoColor=white)
+![Railway](https://img.shields.io/badge/Desplegado%20en-Railway-8B5CF6?logo=railway&logoColor=white)
 
 ---
+
+## 🌐 Demo en Producción (Railway)
+
+| Servicio | URL en Vivo |
+| :--- | :--- |
+| 🎨 **Frontend (Tienda)** | [https://creative-rebirth-nexusgmaes.up.railway.app](https://creative-rebirth-nexusgmaes.up.railway.app) |
+| ⚙️ **Backend API REST** | [https://entregable5nexusgames-nexusgmaes.up.railway.app](https://entregable5nexusgames-nexusgmaes.up.railway.app) |
+| 📖 **Swagger UI (Docs interactivos)** | [https://entregable5nexusgames-nexusgmaes.up.railway.app/docs](https://entregable5nexusgames-nexusgmaes.up.railway.app/docs) |
+| 🏥 **Health Check API** | [https://entregable5nexusgames-nexusgmaes.up.railway.app/api/health](https://entregable5nexusgames-nexusgmaes.up.railway.app/api/health) |
+
+---
+
+
 
 ## 📌 Descripción del Proyecto
 
