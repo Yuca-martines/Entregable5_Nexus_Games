@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { initDB } from './config/db.js';
 
-// Importar Rutas
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
@@ -14,22 +13,24 @@ import orderRoutes from './routes/orderRoutes.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middlewares Globales
+// ===============================
+// MIDDLEWARES
+// ===============================
+
 app.use(cors({
-  origin: '*', // Permitir conexión desde Vite Frontend en cualquier puerto
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Inicialización de la Base de Datos Relacional SQL
-await initDB();
+// ===============================
+// RUTAS
+// ===============================
 
-// Rutas de la API REST
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
@@ -37,16 +38,33 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/orders', orderRoutes);
 
-// Ruta de Verificación de Estado (Health Check)
+// ===============================
+// HEALTH CHECK
+// ===============================
+
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
-    project: 'Nexus Games API - React + Node.js + SQL (Tercer Entregable)',
+    project: 'Nexus Games API',
+    message: 'Backend funcionando correctamente',
     timestamp: new Date().toISOString()
   });
 });
 
-// Manejador de rutas no encontradas (404)
+// ===============================
+// RUTA PRINCIPAL
+// ===============================
+
+app.get('/', (req, res) => {
+  res.status(200).json({
+    message: 'Nexus Games API funcionando correctamente'
+  });
+});
+
+// ===============================
+// 404
+// ===============================
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -54,21 +72,35 @@ app.use((req, res) => {
   });
 });
 
-// Manejador global de errores
+// ===============================
+// MANEJO DE ERRORES
+// ===============================
+
 app.use((err, req, res, next) => {
   console.error('Error no capturado:', err);
+
   res.status(500).json({
     success: false,
     message: 'Ocurrió un error inesperado en el servidor.',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: process.env.NODE_ENV === 'development'
+      ? err.message
+      : undefined
   });
 });
 
-// Iniciar Servidor
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 SERVIDOR BACKEND ACTIVO EN: http://localhost:${PORT}`);
-  console.log(`📦 Base de Datos SQL: SQLite (Lista para Entrega)`);
-  console.log(`🔑 Autenticación: JWT + Hashing Bcrypt`);
-  console.log(`=======================================================`);
-});
+// ===============================
+// BASE DE DATOS
+// ===============================
+
+try {
+  await initDB();
+  console.log('Base de datos inicializada correctamente');
+} catch (error) {
+  console.error('Error inicializando la base de datos:', error);
+}
+
+// ===============================
+// EXPORTAR PARA VERCEL
+// ===============================
+
+export default app;
