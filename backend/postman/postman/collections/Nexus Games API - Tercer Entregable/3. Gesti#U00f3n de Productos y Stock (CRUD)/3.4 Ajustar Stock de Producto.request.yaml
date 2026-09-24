@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/products/1/stock"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+body:
+  type: text
+  content: |-
+    {
+      "stock": 35
+    }
+order: 4000

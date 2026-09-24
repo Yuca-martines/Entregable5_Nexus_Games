@@ -1,0 +1,474 @@
+===================================================================================
+ GUÍA COMPLETA DE PETICIONES POSTMAN - PROYECTO NEXUS GAMES (API REST + SQL + JWT)
+===================================================================================
+
+Este archivo contiene la guía paso a paso para configurar y probar todas las peticiones 
+en Postman, organizadas por método HTTP (GET, POST, PUT, PATCH, DELETE), incluyendo 
+ejemplos exactos de URLs, Headers, Cuerpos JSON (Body) y Respuestas esperadas.
+
+-----------------------------------------------------------------------------------
+ 📌 1. PASOS GENERALES PARA USAR POSTMAN CORRECTAMENTE
+-----------------------------------------------------------------------------------
+
+PASO 1: Asegúrate de tener el Backend encendido
+   En la terminal del backend:
+   > npm run dev
+   (El servidor debe indicar: 🚀 SERVIDOR BACKEND ACTIVO EN: http://localhost:5000)
+
+PASO 2: Configurar una Petición POST, PUT o PATCH con Body JSON
+   1. Abre Postman y crea una nueva pestaña con el botón [+].
+   2. Selecciona el Método correspondiente (POST, PUT o PATCH).
+   3. Escribe la URL (Ejemplo: http://localhost:5000/api/auth/login).
+   4. Ve a la pestaña "Body" (debajo de la barra de URL).
+   5. Selecciona el botón radial "raw".
+   6. En el menú desplegable a la derecha (donde dice "Text"), cámbialo a "JSON".
+   7. Pega tu JSON en el editor y haz clic en el botón azul "Send".
+
+PASO 3: Cómo usar el Token JWT en Peticiones Protegidas (GET, POST, PUT, PATCH, DELETE)
+   Cuando hagas Login o Registro, el servidor te devolverá un "token" largo.
+   Para usarlo en los endpoints que requieren autenticación:
+   - Opción A (Recomendada): 
+     En Postman, ve a la pestaña "Authorization" -> Tipo: "Bearer Token" -> Pega el token.
+   - Opción B (Manual por Headers):
+     Ve a la pestaña "Headers" -> Agrega una fila:
+     Key: Authorization
+     Value: Bearer <PEGA_TU_TOKEN_AQUÍ>
+
+PASO 4: Importar la Colección Automática (Opcional)
+   En Postman, presiona el botón "Import" y selecciona el archivo:
+   d:\Entregable3\backend\postman\Nexus_Games_API.postman_collection.json
+
+
+===================================================================================
+ 🔐 2. MÓDULO DE AUTENTICACIÓN (AUTH & TOKEN JWT)
+===================================================================================
+
+-----------------------------------------------------------------------------------
+[POST] 2.1 INICIAR SESIÓN (GENERACIÓN DE TOKEN JWT)
+-----------------------------------------------------------------------------------
+Descripción: Valida usuario y contraseña cifrada con Bcrypt y genera el Token JWT.
+Método: POST
+URL: http://localhost:5000/api/auth/login
+Headers:
+  Content-Type: application/json
+
+Body (raw -> JSON):
+{
+  "email": "admin@nexusgames.com",
+  "password": "Admin123*"
+}
+
+Cuentas de Prueba Pre-registradas:
+- Admin: email: "admin@nexusgames.com" | password: "Admin123*"
+- Empleado: email: "empleado@nexusgames.com" | password: "Empleado123*"
+- Cliente: email: "cliente@nexusgames.com" | password: "Cliente123*"
+
+Respuesta Exitosa (200 OK):
+{
+  "success": true,
+  "message": "¡Bienvenido de nuevo, Administrador!",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 1,
+    "nombre": "Administrador",
+    "apellido": "Nexus",
+    "email": "admin@nexusgames.com",
+    "rol_id": 1,
+    "rol_nombre": "Administrador",
+    "estado": "Activo"
+  }
+}
+
+-----------------------------------------------------------------------------------
+[POST] 2.2 REGISTRO DE NUEVO CLIENTE (GENERA TOKEN JWT)
+-----------------------------------------------------------------------------------
+Descripción: Registra un nuevo usuario en la base de datos SQL con validaciones:
+- Teléfono: exactamente 10 dígitos numéricos.
+- Contraseña: mínimo 8 caracteres con al menos un símbolo especial (!@#$%&*...).
+- Nombres: entre 2 y 40 letras.
+- Documento: entre 6 y 12 caracteres.
+Método: POST
+URL: http://localhost:5000/api/auth/register
+Headers:
+  Content-Type: application/json
+
+Body (raw -> JSON):
+{
+  "nombre": "Sebastian",
+  "apellido": "Vargas",
+  "tipo_documento": "CC",
+  "numero_documento": "1040506070",
+  "direccion": "Calle 45 # 12-34, Medellín",
+  "telefono": "3129876543",
+  "email": "sebastian.vargas@ejemplo.com",
+  "password": "GamerPassword2026*"
+}
+
+Respuesta Exitosa (201 Created):
+{
+  "success": true,
+  "message": "¡Usuario registrado exitosamente!",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "id": 4,
+    "nombre": "Sebastian",
+    "apellido": "Vargas",
+    "email": "sebastian.vargas@ejemplo.com",
+    "rol_id": 3,
+    "rol_nombre": "Cliente",
+    "estado": "Activo"
+  }
+}
+
+-----------------------------------------------------------------------------------
+[GET] 2.3 OBTENER PERFIL ACTUAL (RUTA PROTEGIDA CON JWT)
+-----------------------------------------------------------------------------------
+Descripción: Devuelve la información del usuario autenticado a través del token.
+Método: GET
+URL: http://localhost:5000/api/auth/me
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Respuesta Exitosa (200 OK):
+{
+  "success": true,
+  "user": {
+    "id": 1,
+    "email": "admin@nexusgames.com",
+    "rol_id": 1,
+    "rol_nombre": "Administrador"
+  }
+}
+
+-----------------------------------------------------------------------------------
+[POST] 2.4 RECUPERACIÓN DE CONTRASEÑA
+-----------------------------------------------------------------------------------
+Método: POST
+URL: http://localhost:5000/api/auth/recover-password
+Headers:
+  Content-Type: application/json
+
+Body (raw -> JSON):
+{
+  "email": "cliente@nexusgames.com"
+}
+
+
+===================================================================================
+ 👥 3. MÓDULO DE USUARIOS (CRUD COMPLETO)
+===================================================================================
+
+-----------------------------------------------------------------------------------
+[GET] 3.1 LISTAR TODOS LOS USUARIOS (CON BÚSQUEDA Y FILTROS)
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/users
+Parámetros opcionales (Query Params):
+- Buscar por texto: http://localhost:5000/api/users?search=Carlos
+- Filtrar por rol: http://localhost:5000/api/users?rol_id=2
+- Filtrar por estado: http://localhost:5000/api/users?estado=Activo
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+-----------------------------------------------------------------------------------
+[GET] 3.2 OBTENER USUARIO POR ID
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/users/1
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+-----------------------------------------------------------------------------------
+[POST] 3.3 CREAR USUARIO DESDE PANEL ADMINISTRATIVO
+-----------------------------------------------------------------------------------
+Método: POST
+URL: http://localhost:5000/api/users
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "nombre": "Mariana",
+  "apellido": "López",
+  "tipo_documento": "CC",
+  "numero_documento": "1080907060",
+  "direccion": "Avenida Siempre Viva 742",
+  "telefono": "3004445566",
+  "email": "mariana.admin@nexusgames.com",
+  "password": "AdminMariana2026*",
+  "rol_id": 2,
+  "estado": "Activo"
+}
+
+-----------------------------------------------------------------------------------
+[PUT] 3.4 ACTUALIZAR USUARIO COMPLETO
+-----------------------------------------------------------------------------------
+Método: PUT
+URL: http://localhost:5000/api/users/4
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "nombre": "Sebastian Actualizado",
+  "apellido": "Vargas",
+  "tipo_documento": "CC",
+  "numero_documento": "1040506070",
+  "direccion": "Nueva Calle 100 # 50-20",
+  "telefono": "3159998877",
+  "email": "sebastian.nuevo@ejemplo.com",
+  "rol_id": 3,
+  "estado": "Activo"
+}
+
+-----------------------------------------------------------------------------------
+[PATCH] 3.5 CAMBIAR ESTADO DE USUARIO (ACTIVO / INACTIVO)
+-----------------------------------------------------------------------------------
+Método: PATCH
+URL: http://localhost:5000/api/users/4/status
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "estado": "Inactivo"
+}
+
+-----------------------------------------------------------------------------------
+[DELETE] 3.6 ELIMINAR USUARIO PERMANENTEMENTE
+-----------------------------------------------------------------------------------
+Método: DELETE
+URL: http://localhost:5000/api/users/4
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+
+===================================================================================
+ 🎮 4. MÓDULO DE PRODUCTOS Y CONTROL DE STOCK (CRUD)
+===================================================================================
+
+-----------------------------------------------------------------------------------
+[GET] 4.1 LISTAR CATÁLOGO DE PRODUCTOS (PÚBLICO)
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/products
+Parámetros opcionales:
+- Por categoría: http://localhost:5000/api/products?categoria_id=1
+- Por búsqueda: http://localhost:5000/api/products?search=Cyberpunk
+
+-----------------------------------------------------------------------------------
+[GET] 4.2 LISTAR CATEGORÍAS DE PRODUCTOS
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/products/categories
+
+-----------------------------------------------------------------------------------
+[POST] 4.3 CREAR NUEVO PRODUCTO (ADMIN / EMPLEADO)
+-----------------------------------------------------------------------------------
+Método: POST
+URL: http://localhost:5000/api/products
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "nombre": "Teclado Mecánico RGB Pro",
+  "descripcion": "Teclado mecánico switches ópticos lineales con iluminación RGB personalizable.",
+  "precio": 320000,
+  "stock": 15,
+  "categoria_id": 2,
+  "plataforma": "PC / Mac",
+  "imagen": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600",
+  "destacado": 1
+}
+
+-----------------------------------------------------------------------------------
+[PUT] 4.4 ACTUALIZAR PRODUCTO COMPLETO
+-----------------------------------------------------------------------------------
+Método: PUT
+URL: http://localhost:5000/api/products/1
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "nombre": "Cyberpunk 2077: Edición Phantom Liberty Ultimate",
+  "descripcion": "Edición definitiva que incluye juego base y expansión Phantom Liberty.",
+  "precio": 219900,
+  "stock": 25,
+  "categoria_id": 1,
+  "plataforma": "Multiplataforma",
+  "imagen": "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600",
+  "destacado": 1,
+  "estado": "Activo"
+}
+
+-----------------------------------------------------------------------------------
+[PATCH] 4.5 ACTUALIZAR STOCK EN TIEMPO REAL (+ / -)
+-----------------------------------------------------------------------------------
+Método: PATCH
+URL: http://localhost:5000/api/products/1/stock
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON) - Opción A: Asignar stock exacto:
+{
+  "stock": 50
+}
+
+Body (raw -> JSON) - Opción B: Incrementar / Decrementar con delta:
+{
+  "delta": -2
+}
+
+-----------------------------------------------------------------------------------
+[DELETE] 4.6 ELIMINAR PRODUCTO
+-----------------------------------------------------------------------------------
+Método: DELETE
+URL: http://localhost:5000/api/products/5
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+
+===================================================================================
+ 🛠️ 5. MÓDULO DE SERVICIOS GAMER (CRUD)
+===================================================================================
+
+-----------------------------------------------------------------------------------
+[GET] 5.1 LISTAR SERVICIOS DISPONIBLES
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/services
+
+-----------------------------------------------------------------------------------
+[POST] 5.2 CREAR SERVICIO
+-----------------------------------------------------------------------------------
+Método: POST
+URL: http://localhost:5000/api/services
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "nombre": "Mantenimiento y Cambio de Pasta Térmica",
+  "descripcion": "Limpieza profunda de componentes y pasta térmica de alta conductividad.",
+  "precio": 85000,
+  "duracion_estimada": "2 a 3 Horas",
+  "icono": "Wrench"
+}
+
+-----------------------------------------------------------------------------------
+[PUT] 5.3 ACTUALIZAR SERVICIO
+-----------------------------------------------------------------------------------
+Método: PUT
+URL: http://localhost:5000/api/services/1
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+-----------------------------------------------------------------------------------
+[DELETE] 5.4 ELIMINAR SERVICIO
+-----------------------------------------------------------------------------------
+Método: DELETE
+URL: http://localhost:5000/api/services/1
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+
+===================================================================================
+ 🛒 6. MÓDULO DE PEDIDOS Y VENTAS (CHECKOUT & CLIENTE)
+===================================================================================
+
+-----------------------------------------------------------------------------------
+[POST] 6.1 REALIZAR UN PEDIDO / CHECKOUT DE CARRITO (REDUCE STOCK AUTOMÁTICAMENTE)
+-----------------------------------------------------------------------------------
+Método: POST
+URL: http://localhost:5000/api/orders
+Headers:
+  Content-Type: application/json
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+Body (raw -> JSON):
+{
+  "metodo_pago": "Tarjeta de Crédito / Débito",
+  "direccion_envio": "Calle 100 # 15-20, Bogotá",
+  "items": [
+    {
+      "producto_id": 1,
+      "cantidad": 2,
+      "precio_unitario": 219900
+    }
+  ]
+}
+
+Respuesta Exitosa (201 Created):
+{
+  "success": true,
+  "message": "¡Compra procesada exitosamente!",
+  "orderId": 1,
+  "total": 439800
+}
+
+-----------------------------------------------------------------------------------
+[GET] 6.2 OBTENER HISTORIAL DE PEDIDOS DEL CLIENTE AUTENTICADO
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/orders/my-orders
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+-----------------------------------------------------------------------------------
+[GET] 6.3 LISTAR TODOS LOS PEDIDOS DEL SISTEMA (ADMINISTRADOR)
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/orders/all
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+
+===================================================================================
+ 🛡️ 7. MÓDULO DE ROLES Y ESTADÍSTICAS
+===================================================================================
+
+-----------------------------------------------------------------------------------
+[GET] 7.1 LISTAR ROLES Y PERMISOS ASIGNADOS
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/roles
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+-----------------------------------------------------------------------------------
+[GET] 7.2 ESTADÍSTICAS GENERALES DE ROLES Y USUARIOS
+-----------------------------------------------------------------------------------
+Método: GET
+URL: http://localhost:5000/api/roles/stats
+Headers:
+  Authorization: Bearer <TU_TOKEN_JWT>
+
+
+===================================================================================
+ 🩺 8. VERIFICACIÓN DE ESTADO (HEALTH CHECK)
+===================================================================================
+
+[GET] 8.1 VERIFICAR ESTADO DEL BACKEND
+URL: http://localhost:5000/api/health
+Método: GET
+
+Respuesta Exitosa (200 OK):
+{
+  "status": "online",
+  "project": "Nexus Games API - React + Node.js + SQL (Tercer Entregable)",
+  "timestamp": "2026-08-31T03:55:00.000Z"
+}
+
+===================================================================================
+ FIN DEL DOCUMENTO - NEXUS GAMES API 2026
+===================================================================================

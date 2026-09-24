@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/products/1"
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Cyberpunk 2077: Phantom Liberty (Edición Coleccionista)",
+      "descripcion": "Incluye pase de expansión y libro de arte digital oficial.",
+      "precio": 259900,
+      "stock": 20,
+      "categoria_id": 1,
+      "destacado": 1
+    }
+order: 3000

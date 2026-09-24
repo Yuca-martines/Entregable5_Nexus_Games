@@ -1,0 +1,11 @@
+# Use this workspace to collaborate
+workspace:
+  id: d5ccc499-ccb5-4b45-800c-4a469edabc21
+
+localResources:
+  collections:
+    - ../Nexus_Games_API.postman_collection.json
+
+cloudResources:
+  collections:
+    ../postman/collections/Nexus Games API - Tercer Entregable: 598f8e16-1a64-45ee-bcdd-277b35bf0ec7

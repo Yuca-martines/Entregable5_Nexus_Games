@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/users/2"
+method: PUT
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Mariana Sofia",
+      "apellido": "Torres",
+      "tipo_documento": "CC",
+      "numero_documento": "1020304050",
+      "direccion": "Avenida El Poblado # 10-20",
+      "telefono": "3009988776",
+      "email": "mariana.torres@nexusgames.com",
+      "rol_id": 2,
+      "estado": "Activo"
+    }
+order: 3000

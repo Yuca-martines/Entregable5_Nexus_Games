@@ -1,0 +1,178 @@
+================================================================================
+          PROYECTO FULL STACK NEXUS GAMES - TERCER ENTREGABLE (SENA)
+            GUÍA DE ESTRUCTURA DE CARPETAS Y ARCHIVOS IMPORTANTES
+================================================================================
+
+Este documento describe detalladamente la función y el propósito de cada una de 
+las carpetas y archivos fundamentales que componen la arquitectura del proyecto 
+(Frontend en React + Vite, Backend en Node.js + Express y Base de Datos SQL Relacional).
+
+--------------------------------------------------------------------------------
+1. ESTRUCTURA GENERAL DEL PROYECTO
+--------------------------------------------------------------------------------
+
+Entregable3/
+├── backend/                  -> Servidor API REST, base de datos SQL y autenticación JWT.
+├── public/                   -> Archivos estáticos y recursos públicos del frontend.
+├── src/                      -> Código fuente de la aplicación Frontend en React.
+├── index.html                -> Punto de entrada HTML principal para Vite.
+├── package.json              -> Configuración y dependencias del Frontend.
+├── vite.config.js            -> Configuración del empaquetador y servidor Vite.
+└── ESTRUCTURA_Y_DOCUMENTACION_PROYECTO.txt -> Este archivo de documentación.
+
+
+--------------------------------------------------------------------------------
+2. CARPETA BACKEND (/backend) - SERVIDOR, BASE DE DATOS Y API REST
+--------------------------------------------------------------------------------
+
+La carpeta backend contiene toda la lógica de negocio del servidor, gestión de
+seguridad, hashing de contraseñas, tokens JWT y persistencia en la base de datos relacional SQL.
+
+• backend/server.js:
+  Archivo principal de arranque del servidor Express. Inicializa la conexión con
+  la base de datos SQLite nativa, configura middlewares globales (CORS, JSON Parser),
+  registra todos los enrutadores (/api/auth, /api/users, /api/products, etc.) y expone
+  el puerto (por defecto 5000).
+
+• backend/.env:
+  Archivo de variables de entorno (puerto del servidor, clave secreta JWT_SECRET).
+
+• backend/package.json:
+  Lista de dependencias del backend: Express, CORS, Dotenv, JsonWebToken y BcryptJS.
+
+• backend/config/:
+  - db.js: Configuración y conexión con la base de datos SQL SQLite nativa.
+    Contiene los métodos asíncronos para ejecutar consultas (query, get, run) y la
+    función initDB() que crea automáticamente las tablas y usuarios de prueba.
+
+• backend/database/:
+  - schema.sql: Script SQL con la definición de todas las tablas relacionales:
+    * roles (Administrador, Empleado, Cliente)
+    * permisos y rol_permisos (Matriz de permisos por rol)
+    * usuarios (con llaves foráneas a roles y estado Activo/Inactivo)
+    * categorias
+    * productos (con campos de precio, stock e inventario)
+    * servicios (servicios técnicos especializados)
+    * pedidos y pedido_detalles (historial de compras y ventas)
+  - seed.sql: Script con los datos iniciales (categorías, productos, servicios, roles y permisos).
+  - database.sqlite: Archivo físico de la base de datos relacional SQLite que persiste la información.
+
+• backend/middlewares/:
+  - authMiddleware.js: Middleware que intercepta y verifica el JSON Web Token (JWT)
+    en las cabeceras Authorization (Bearer token), extrayendo la identidad del usuario y sus permisos.
+  - roleMiddleware.js: Control de acceso basado en roles (RBAC). Protege las rutas
+    para que solo administradores o empleados puedan realizar operaciones según sus privilegios.
+
+• backend/controllers/:
+  - authController.js: Lógica de registro de clientes (con hashing Bcrypt), inicio de sesión
+    (login con JWT), obtención de perfil (/me) y recuperación de contraseña.
+  - userController.js: CRUD completo de usuarios (crear, listar, consultar por ID, editar datos,
+    alternar estado Activo/Inactivo y eliminar usuario).
+  - productController.js: CRUD de productos, categorías, filtrado y ajuste directo de stock (+/-).
+  - serviceController.js: CRUD para la gestión de servicios técnicos (mantenimientos, ensamble).
+  - roleController.js: Consulta de la matriz de roles y permisos, y cálculo de estadísticas (stats).
+  - orderController.js: Procesamiento de compras/checkout, descuento de stock y consulta de pedidos.
+
+• backend/routes/:
+  - authRoutes.js: Endpoints para /api/auth (login, register, me, recover-password).
+  - userRoutes.js: Endpoints para /api/users (CRUD de usuarios protegido por roles).
+  - productRoutes.js: Endpoints para /api/products (catálogo público y gestión de stock).
+  - serviceRoutes.js: Endpoints para /api/services (servicios técnicos).
+  - roleRoutes.js: Endpoints para /api/roles (roles, permisos y estadísticas del dashboard).
+  - orderRoutes.js: Endpoints para /api/orders (compras e historial de pedidos).
+
+• backend/postman/:
+  - Nexus_Games_API.postman_collection.json: Colección lista para importar en Postman
+    con todos los escenarios de prueba probados (GET, POST, PUT, PATCH, DELETE y JWT).
+
+
+--------------------------------------------------------------------------------
+3. CARPETA FRONTEND (/src) - INTERFAZ DE USUARIO REACT + VITE
+--------------------------------------------------------------------------------
+
+• src/main.jsx:
+  Punto de entrada de React donde se monta la aplicación en el DOM raíz (#root).
+
+• src/App.jsx:
+  Componente principal de la aplicación. Configura los proveedores de contexto (AuthProvider,
+  CartProvider), el enrutador BrowserRouter y define las rutas públicas y protegidas:
+  - /          -> Página de Inicio (Home)
+  - /catalog   -> Catálogo de Venta de Productos y Stock
+  - /admin     -> Panel de Administrador (Ruta Protegida para rol Administrador)
+  - /employee  -> Panel de Empleado (Ruta Protegida para Administrador y Empleado)
+  - /client    -> Panel de Cliente (Mi Cuenta y Pedidos)
+  - /about     -> Información de la empresa
+  - /contact   -> Soporte y contacto
+
+• src/index.css:
+  Hoja de estilos global con la paleta de lujo solicitada:
+  - Negro profundo (#0A0B0E, #12151D)
+  - Grises modernos (#262C3D, #8E98A8)
+  - Blanco de alto contraste (#FFFFFF, #F8FAFC)
+  - Dorado y Ámbar (#D4AF37, #FFDF73)
+  Contiene los estilos para tablas de datos, dashboards, insignias, botones, tarjetas,
+  modales y animaciones.
+
+• src/services/:
+  - api.js: Cliente HTTP centralizado que se comunica con el Backend en http://localhost:5000/api.
+    Inyecta automáticamente el token JWT en las peticiones y maneja respuestas y errores.
+
+• src/context/:
+  - AuthContext.jsx: Contexto global de autenticación. Maneja el estado del usuario,
+    el token JWT en localStorage, login, registro, logout y apertura del modal de autenticación.
+  - CartContext.jsx: Contexto del carrito de compras (agregar, eliminar, vaciar y calcular totales).
+
+• src/components/:
+  - Header.jsx: Barra de navegación superior con logotipo, enlaces, carrito, badge del rol
+    del usuario autenticado (Admin / Empleado / Cliente) y botón de cierre de sesión.
+  - Footer.jsx: Pie de página con enlaces institucionales, redes y políticas.
+  - Carousel.jsx: Carrusel interactivo para la sección hero de la página de inicio.
+  - AuthModal.jsx: Modal con validaciones en tiempo real (regex, longitudes de cédula y teléfono)
+    para inicio de sesión, registro de nuevos clientes y recuperación de contraseña.
+  - WhatsAppButton.jsx: Botón flotante fijo en la esquina inferior derecha con tooltip y animación pulsante.
+  - ProtectedRoute.jsx: Componente de seguridad para proteger rutas en el frontend según el rol del usuario.
+  - CartDrawer.jsx: Panel lateral desplegable del carrito de compras y proceso de checkout.
+  - ui/: Componentes reutilizables de interfaz (Button, Input, Modal, Badge).
+
+• src/pages/:
+  - Index.jsx: Página de inicio limpia con Carrusel interactivo, pilares informativos de la marca,
+    garantías oficiales y botón hacia el catálogo de productos.
+  - Catalog.jsx: Tienda completa de venta de productos con filtros por categoría, buscador en
+    tiempo real, indicadores de stock (Disponible, Últimas unidades, Agotado) y botón de agregar al carrito.
+  - AdminDashboard.jsx: Panel exclusivo para Administradores con 5 pestañas:
+    1. Gestión de Productos y Stock (CRUD completo, ajuste rápido +/- de inventario y alertas).
+    2. Gestión de Usuarios (CRUD completo, cambio de estado Activo/Inactivo, edición y eliminación).
+    3. Gestión de Servicios Técnicos.
+    4. Matriz de Roles y Permisos (RBAC).
+    5. Pedidos y Ventas registradas.
+  - EmployeeDashboard.jsx: Panel operativo para Empleados enfocado en control de stock,
+    reabastecimiento y consulta de pedidos.
+  - ClientDashboard.jsx: Panel para Clientes con información de perfil editable e historial de compras.
+  - About.jsx: Sección informativa "¿Quiénes Somos?".
+  - Contact.jsx: Formulario de atención y soporte al cliente.
+
+
+--------------------------------------------------------------------------------
+4. CUENTAS DE USUARIO PREDETERMINADAS PARA PRUEBAS (SEEDS)
+--------------------------------------------------------------------------------
+
+El sistema incluye 3 usuarios creados con contraseñas encriptadas mediante Bcrypt:
+
+1. Administrador (Control Total):
+   • Correo: admin@nexusgames.com
+   • Clave:  Admin123*
+   • Acceso: /admin (CRUD de Usuarios, Productos, Stock, Roles y Servicios)
+
+2. Empleado (Gestión de Inventario y Pedidos):
+   • Correo: empleado@nexusgames.com
+   • Clave:  Empleado123*
+   • Acceso: /employee (Ajuste de Stock, Inventario y Consulta de Pedidos)
+
+3. Cliente (Compras y Perfil):
+   • Correo: cliente@nexusgames.com
+   • Clave:  Cliente123*
+   • Acceso: /client (Historial de Compras y Datos Personales)
+
+================================================================================
+                 FIN DEL DOCUMENTO DE ESTRUCTURA Y GUÍA
+================================================================================

@@ -1,0 +1,369 @@
+{
+	"info": {
+		"_postman_id": "nexus-games-quinto-avance-2026",
+		"name": "Nexus Games API - Quinto Avance (SENA)",
+		"description": "Colección completa de endpoints para el Quinto Avance: Módulo de Ventas, Facturación Oficial, Reporte Diario, PQR, Chatbot con IA y Analítica de Dashboards.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "0. Autenticación",
+			"item": [
+				{
+					"name": "Login Administrador",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@nexusgames.com\",\n  \"password\": \"Admin123*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				},
+				{
+					"name": "Login Cliente",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"cliente@nexusgames.com\",\n  \"password\": \"Cliente123*\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["auth", "login"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Módulo de Ventas",
+			"item": [
+				{
+					"name": "Registrar Venta (Producto + Servicio)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"tipo\": \"Producto\",\n      \"id\": 1,\n      \"nombre\": \"Cyberpunk 2077: Phantom Liberty\",\n      \"cantidad\": 1,\n      \"precio\": 219900,\n      \"descuento\": 0\n    },\n    {\n      \"tipo\": \"Servicio\",\n      \"id\": 1,\n      \"nombre\": \"Mantenimiento Preventivo y Limpieza Profunda PC/Consola\",\n      \"cantidad\": 1,\n      \"precio\": 120000,\n      \"descuento\": 0\n    }\n  ],\n  \"metodo_pago\": \"Tarjeta de Crédito / PSE\",\n  \"descuento_general\": 0,\n  \"notas\": \"Venta combinada desde el sitio web\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/sales",
+							"host": ["{{baseUrl}}"],
+							"path": ["sales"]
+						}
+					}
+				},
+				{
+					"name": "Consultar Historial de Ventas (Con Filtros)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/sales?estado=Completada",
+							"host": ["{{baseUrl}}"],
+							"path": ["sales"],
+							"query": [
+								{
+									"key": "estado",
+									"value": "Completada"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Reporte Diario de Ventas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/sales/daily",
+							"host": ["{{baseUrl}}"],
+							"path": ["sales", "daily"]
+						}
+					}
+				},
+				{
+					"name": "Consultar Venta por ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/sales/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["sales", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Módulo de Facturación",
+			"item": [
+				{
+					"name": "Consultar Facturas (Filtro por Cliente o Número)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invoices",
+							"host": ["{{baseUrl}}"],
+							"path": ["invoices"]
+						}
+					}
+				},
+				{
+					"name": "Mis Facturas (Cliente)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invoices/my-invoices",
+							"host": ["{{baseUrl}}"],
+							"path": ["invoices", "my-invoices"]
+						}
+					}
+				},
+				{
+					"name": "Consultar Factura por Número Correlativo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/invoices/by-number/FACT-2026-00001",
+							"host": ["{{baseUrl}}"],
+							"path": ["invoices", "by-number", "FACT-2026-00001"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Módulo de PQR",
+			"item": [
+				{
+					"name": "Radicar PQR",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"tipo\": \"Petición\",\n  \"asunto\": \"Consulta sobre disponibilidad de memoria RAM DDR5\",\n  \"descripcion\": \"Deseo saber si cuentan con kits de 32GB 6000MHz CL30 para ensamble personalizado.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/pqr",
+							"host": ["{{baseUrl}}"],
+							"path": ["pqr"]
+						}
+					}
+				},
+				{
+					"name": "Consultar Mis PQR (Cliente)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/pqr/my-pqr",
+							"host": ["{{baseUrl}}"],
+							"path": ["pqr", "my-pqr"]
+						}
+					}
+				},
+				{
+					"name": "Listar Todas las PQR (Admin / Empleado)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/pqr/all",
+							"host": ["{{baseUrl}}"],
+							"path": ["pqr", "all"]
+						}
+					}
+				},
+				{
+					"name": "Rastrear PQR por Radicado (Público)",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/pqr/track/PQR-2026-00001",
+							"host": ["{{baseUrl}}"],
+							"path": ["pqr", "track", "PQR-2026-00001"]
+						}
+					}
+				},
+				{
+					"name": "Responder y Actualizar Estado de PQR",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"estado\": \"Respondida\",\n  \"respuesta\": \"Apreciado cliente, confirmamos stock disponible de memorias Corsair Vengeance DDR5 6000MHz CL30.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/pqr/1/respond",
+							"host": ["{{baseUrl}}"],
+							"path": ["pqr", "1", "respond"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Chatbot con IA",
+			"item": [
+				{
+					"name": "Conversar con el Chatbot de IA",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"¿Cuáles son los pasos para radicar una queja o garantía por una tarjeta de video?\",\n  \"session_id\": \"demo_postman_session\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/chatbot/message",
+							"host": ["{{baseUrl}}"],
+							"path": ["chatbot", "message"]
+						}
+					}
+				},
+				{
+					"name": "Historial de Chat de una Sesión",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/chatbot/history/demo_postman_session",
+							"host": ["{{baseUrl}}"],
+							"path": ["chatbot", "history", "demo_postman_session"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Analítica & Dashboard",
+			"item": [
+				{
+					"name": "Estadísticas Consolidadas (/api/roles/stats)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/roles/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["roles", "stats"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://127.0.0.1:8000/api"
+		},
+		{
+			"key": "token",
+			"value": ""
+		}
+	]
+}

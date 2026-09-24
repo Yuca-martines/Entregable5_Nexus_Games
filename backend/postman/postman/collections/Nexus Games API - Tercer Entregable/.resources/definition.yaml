@@ -1,0 +1,5 @@
+$kind: collection
+description: Colección completa de endpoints para el Tercer Entregable del Proyecto React + Node.js + Base de Datos Relacional SQL. Incluye autenticación JWT, CRUD de usuarios, roles, permisos, productos, stock y servicios.
+variables:
+  baseUrl: 'http://127.0.0.1:8000/api'
+  token: ""

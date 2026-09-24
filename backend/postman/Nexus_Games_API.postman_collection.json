@@ -1,0 +1,594 @@
+{
+  "info": {
+    "name": "Nexus Games API - Cuarto Entregable (React + Vite + FastAPI + SQL)",
+    "_postman_id": "8f3b4c12-789a-4c2d-94bf-a1b2c3d4e5f6",
+    "description": "Colección completa de endpoints para el Cuarto Entregable Full Stack: React + Vite + FastAPI + Base de Datos Relacional SQL. Incluye autenticación JWT, hashing Bcrypt, control de roles (Admin, Empleado, Cliente), endpoints protegidos, CRUD de usuarios, productos, servicios, stock y respuestas de error.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticación y Registro",
+      "item": [
+        {
+          "name": "1.1 Registro de Usuario (POST /api/usuarios/registro)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Laura\",\n  \"apellido\": \"Mendoza\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1098765432\",\n  \"direccion\": \"Carrera 15 # 85-30, Bogotá\",\n  \"telefono\": \"3112233445\",\n  \"email\": \"laura@ejemplo.com\",\n  \"password\": \"Laura123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "registro"]
+            }
+          }
+        },
+        {
+          "name": "1.2 Iniciar Sesión - Admin (POST /api/auth/login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token JWT guardado automáticamente:', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@nexusgames.com\",\n  \"password\": \"Admin123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.3 Iniciar Sesión - Empleado (POST /api/auth/login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"empleado@nexusgames.com\",\n  \"password\": \"Empleado123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.4 Iniciar Sesión - Cliente (POST /api/auth/login)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@nexusgames.com\",\n  \"password\": \"Cliente123*\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "1.5 Obtener Perfil Autenticado (GET /api/auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "1.6 Recuperar Contraseña (POST /api/auth/recover-password)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@nexusgames.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/recover-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "recover-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Gestión de Usuarios (CRUD)",
+      "item": [
+        {
+          "name": "2.1 Listar Todos los Usuarios (GET /api/usuarios)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Crear Usuario desde Admin (POST /api/usuarios)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Felipe\",\n  \"apellido\": \"Torres\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"1054321987\",\n  \"direccion\": \"Avenida El Dorado # 68-50, Bogotá\",\n  \"telefono\": \"3189998877\",\n  \"email\": \"felipe.torres@nexusgames.com\",\n  \"password\": \"Felipe123*\",\n  \"rol_id\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Consultar Usuario por ID (GET /api/usuarios/1)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "1"]
+            }
+          }
+        },
+        {
+          "name": "2.4 Actualizar Usuario (PUT /api/usuarios/3)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Valentina Actualizada\",\n  \"direccion\": \"Nueva Avenida 6N # 50-20, Cali\",\n  \"telefono\": \"3209876543\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/3",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "3"]
+            }
+          }
+        },
+        {
+          "name": "2.5 Cambiar Estado de Usuario (PATCH /api/usuarios/3/estado)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"Inactivo\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/3/estado",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "3", "estado"]
+            }
+          }
+        },
+        {
+          "name": "2.6 Eliminar Usuario (DELETE /api/usuarios/2)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/2",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "2"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Gestión de Productos y Stock (CRUD)",
+      "item": [
+        {
+          "name": "3.1 Listar Todos los Productos (GET /api/productos)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos"]
+            }
+          }
+        },
+        {
+          "name": "3.2 Listar Categorías (GET /api/productos/categories)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/productos/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos", "categories"]
+            }
+          }
+        },
+        {
+          "name": "3.3 Crear Producto (POST /api/productos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Mouse Gamer Inalámbrico Pro Ultra-Light\",\n  \"descripcion\": \"Sensor óptico de 26.000 DPI, switches ópticos de 100M clics y peso pluma de 58 gramos.\",\n  \"precio\": 420000,\n  \"stock\": 12,\n  \"categoria_id\": 4,\n  \"plataforma\": \"PC / Multiplataforma\",\n  \"imagen\": \"https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?q=80&w=1000&auto=format&fit=crop\",\n  \"destacado\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/productos",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos"]
+            }
+          }
+        },
+        {
+          "name": "3.4 Consultar Producto por ID (GET /api/productos/1)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/productos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos", "1"]
+            }
+          }
+        },
+        {
+          "name": "3.5 Actualizar Producto (PUT /api/productos/1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 199900,\n  \"destacado\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/productos/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos", "1"]
+            }
+          }
+        },
+        {
+          "name": "3.6 Ajustar Stock de Producto (PATCH /api/productos/1/stock)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"delta\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/productos/1/stock",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos", "1", "stock"]
+            }
+          }
+        },
+        {
+          "name": "3.7 Eliminar Producto (DELETE /api/productos/5)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/productos/5",
+              "host": ["{{baseUrl}}"],
+              "path": ["productos", "5"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Gestión de Servicios (CRUD)",
+      "item": [
+        {
+          "name": "4.1 Listar Todos los Servicios (GET /api/servicios)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/servicios",
+              "host": ["{{baseUrl}}"],
+              "path": ["servicios"]
+            }
+          }
+        },
+        {
+          "name": "4.2 Crear Servicio Técnico (POST /api/servicios)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Instalación y Configuración de Refrigeración Líquida Custom\",\n  \"descripcion\": \"Doblado de tubos rígidos, pruebas de estanqueidad y purgado de circuito con líquido refrigerante premium.\",\n  \"precio\": 250000,\n  \"duracion_estimada\": \"48 Horas\",\n  \"icono\": \"Zap\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicios",
+              "host": ["{{baseUrl}}"],
+              "path": ["servicios"]
+            }
+          }
+        },
+        {
+          "name": "4.3 Consultar Servicio por ID (GET /api/servicios/1)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/servicios/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["servicios", "1"]
+            }
+          }
+        },
+        {
+          "name": "4.4 Actualizar Servicio (PUT /api/servicios/1)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"precio\": 135000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/servicios/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["servicios", "1"]
+            }
+          }
+        },
+        {
+          "name": "4.5 Eliminar Servicio (DELETE /api/servicios/3)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servicios/3",
+              "host": ["{{baseUrl}}"],
+              "path": ["servicios", "3"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Roles y Estadísticas",
+      "item": [
+        {
+          "name": "5.1 Listar Roles y Permisos (GET /api/roles)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles"]
+            }
+          }
+        },
+        {
+          "name": "5.2 Estadísticas del Dashboard (GET /api/roles/stats)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/roles/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["roles", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Endpoints Protegidos y Seguridad",
+      "item": [
+        {
+          "name": "6.1 Error 401 - Acceso sin Token",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios"]
+            }
+          }
+        },
+        {
+          "name": "6.2 Error 422 - Validación Pydantic (Correo Inválido)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Perez\",\n  \"tipo_documento\": \"CC\",\n  \"numero_documento\": \"123456\",\n  \"direccion\": \"Calle 1\",\n  \"telefono\": \"123\",\n  \"email\": \"correo-invalido\",\n  \"password\": \"123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/registro",
+              "host": ["{{baseUrl}}"],
+              "path": ["usuarios", "registro"]
+            }
+          }
+        },
+        {
+          "name": "6.3 Health Check (GET /api/health)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

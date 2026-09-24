@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/products"
+method: POST
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Mouse Gamer Inalámbrico Oro 8K",
+      "descripcion": "Sensor óptico de 30.000 DPI con switches ópticos de 3ra generación y acabado dorado.",
+      "precio": 450000,
+      "stock": 12,
+      "categoria_id": 4,
+      "plataforma": "PC",
+      "imagen": "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?q=80&w=1000&auto=format&fit=crop",
+      "destacado": 1,
+      "estado": "Activo"
+    }
+order: 2000

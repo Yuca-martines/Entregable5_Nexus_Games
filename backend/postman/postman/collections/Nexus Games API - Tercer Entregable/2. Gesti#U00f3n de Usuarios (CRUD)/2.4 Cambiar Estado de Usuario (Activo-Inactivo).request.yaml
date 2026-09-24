@@ -1,0 +1,14 @@
+$kind: http-request
+name: 2.4 Cambiar Estado de Usuario (Activo/Inactivo)
+url: "{{baseUrl}}/users/3/status"
+method: PATCH
+headers:
+  Content-Type: application/json
+  Authorization: Bearer {{token}}
+body:
+  type: text
+  content: |-
+    {
+      "estado": "Inactivo"
+    }
+order: 4000

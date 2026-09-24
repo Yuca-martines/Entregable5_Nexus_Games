@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "nombre": "Laura",
+      "apellido": "Mendoza",
+      "tipo_documento": "CC",
+      "numero_documento": "1098765432",
+      "direccion": "Carrera 15 # 85-30, Bogotá",
+      "telefono": "3112233445",
+      "email": "laura@ejemplo.com",
+      "password": "Laura123*"
+    }
+order: 1000
