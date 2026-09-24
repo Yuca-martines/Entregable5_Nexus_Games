@@ -105,7 +105,15 @@ async def generic_exception_handler(request: Request, exc: Exception):
             "error": str(exc) if os.getenv("ENVIRONMENT") == "development" else None
         }
     )
-
+# Endpoint raíz para verificar que el servidor está respondiendo
+@app.get("/")
+def root():
+    return {
+        "mensaje": "Nexus Games API funcionando",
+        "health": "/api/health",
+        "docs": "/docs"
+    }
+    
 # Endpoint de Verificación de Estado (Health Check)
 @app.get("/api/health", tags=["Salud del Sistema"], summary="Verificar estado de salud de la API")
 def health_check():
