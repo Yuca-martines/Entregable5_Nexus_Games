@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # Servicio Backend (FastAPI + SQLite/SQLAlchemy)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nexus_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      - SECRET_KEY=NexusGamesSuperSecretKeyJwt2026SecureProductionToken
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=1440
+      - CORS_ORIGINS=*
+      - ENVIRONMENT=production
+    volumes:
+      - sqlite_data:/app/database
+    networks:
+      - nexus_network
+
+  # Servicio Frontend (React 19 + Vite + Nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:8000/api
+    container_name: nexus_frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - nexus_network
+
+volumes:
+  sqlite_data:
+    driver: local
+
+networks:
+  nexus_network:
+    driver: bridge
