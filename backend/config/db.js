@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const dbPath = path.resolve(__dirname, '../database/database.sqlite');
+const dbPath = process.env.DB_PATH || path.resolve(__dirname, '../database/database.sqlite');
 const schemaPath = path.resolve(__dirname, '../database/schema.sql');
 const seedPath = path.resolve(__dirname, '../database/seed.sql');
 
