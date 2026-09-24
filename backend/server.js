@@ -14,10 +14,6 @@ dotenv.config();
 
 const app = express();
 
-// ===============================
-// MIDDLEWARES
-// ===============================
-
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -27,20 +23,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ===============================
-// RUTAS
-// ===============================
-
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/orders', orderRoutes);
-
-// ===============================
-// HEALTH CHECK
-// ===============================
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -51,19 +39,11 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ===============================
-// RUTA PRINCIPAL
-// ===============================
-
 app.get('/', (req, res) => {
-  res.status(200).json({
+  res.json({
     message: 'Nexus Games API funcionando correctamente'
   });
 });
-
-// ===============================
-// 404
-// ===============================
 
 app.use((req, res) => {
   res.status(404).json({
@@ -72,35 +52,22 @@ app.use((req, res) => {
   });
 });
 
-// ===============================
-// MANEJO DE ERRORES
-// ===============================
-
 app.use((err, req, res, next) => {
-  console.error('Error no capturado:', err);
+  console.error('Error:', err);
 
   res.status(500).json({
     success: false,
-    message: 'Ocurrió un error inesperado en el servidor.',
-    error: process.env.NODE_ENV === 'development'
-      ? err.message
-      : undefined
+    message: 'Error interno del servidor'
   });
 });
 
-// ===============================
-// BASE DE DATOS
-// ===============================
-
+// Inicializar base de datos
 try {
   await initDB();
-  console.log('Base de datos inicializada correctamente');
+  console.log('✅ Base de datos inicializada correctamente');
 } catch (error) {
-  console.error('Error inicializando la base de datos:', error);
+  console.error('❌ Error inicializando la base de datos:', error);
 }
 
-// ===============================
-// EXPORTAR PARA VERCEL
-// ===============================
-
 export default app;
+
