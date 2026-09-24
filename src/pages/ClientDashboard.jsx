@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ordersAPI, usersAPI, invoicesAPI } from '../services/api';
+import { ordersAPI, usersAPI, invoicesAPI, pqrAPI } from '../services/api';
 import {
   User,
   ShoppingBag,
@@ -29,16 +29,23 @@ import { exportInvoiceToPDF } from '../utils/exportSalesDaily';
 
 export default function ClientDashboard() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'invoices' | 'profile'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'invoices' | 'pqr' | 'profile'
   const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [myPqrList, setMyPqrList] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [invoiceSearch, setInvoiceSearch] = useState('');
   const [invoiceDateFilter, setInvoiceDateFilter] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pqrSubmitting, setPqrSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState(null);
+  const [pqrForm, setPqrForm] = useState({
+    tipo: 'Queja',
+    asunto: '',
+    descripcion: ''
+  });
 
   const [profileData, setProfileData] = useState({
     nombre: user?.nombre || '',
@@ -88,9 +95,21 @@ export default function ClientDashboard() {
     }
   };
 
+  const loadMyPqr = async () => {
+    try {
+      const res = await pqrAPI.getMyPQR();
+      if (res.success) {
+        setMyPqrList(res.pqrs || []);
+      }
+    } catch {
+      setMyPqrList([]);
+    }
+  };
+
   useEffect(() => {
     loadOrders();
     loadInvoices();
+    loadMyPqr();
   }, []);
 
   const [errorMessage, setErrorMessage] = useState(null);
@@ -121,6 +140,42 @@ export default function ClientDashboard() {
     if (norm === 'Completada') return 'success';
     if (norm === 'Cancelada') return 'danger';
     return 'default';
+  };
+
+  const handleCreatePQR = async (e) => {
+    e.preventDefault();
+    if (!pqrForm.tipo || !pqrForm.asunto.trim() || !pqrForm.descripcion.trim()) {
+      setErrorMessage('Completa el tipo, asunto y descripción de la PQR.');
+      return;
+    }
+
+    setPqrSubmitting(true);
+    setErrorMessage(null);
+    setSuccessMsg(null);
+
+    try {
+      const payload = {
+        cliente_nombre: user ? `${user.nombre} ${user.apellido}`.trim() : 'Cliente',
+        cliente_email: user?.email || '',
+        cliente_telefono: user?.telefono || '',
+        tipo: pqrForm.tipo,
+        asunto: pqrForm.asunto.trim(),
+        descripcion: pqrForm.descripcion.trim()
+      };
+
+      const res = await pqrAPI.create(payload);
+      if (!res.success) {
+        throw new Error(res.message || 'No se pudo registrar la PQR.');
+      }
+
+      setPqrForm({ tipo: 'Queja', asunto: '', descripcion: '' });
+      setSuccessMsg(`PQR radicada correctamente con el número ${res.pqr?.radicado || ''}.`);
+      await loadMyPqr();
+    } catch (error) {
+      setErrorMessage(error.message || 'Error al registrar la PQR.');
+    } finally {
+      setPqrSubmitting(false);
+    }
   };
 
   const handleUpdateProfile = async (e) => {
@@ -219,6 +274,12 @@ export default function ClientDashboard() {
           onClick={() => setActiveTab('invoices')}
         >
           <FileText size={18} /> Mis Facturas ({invoices.length})
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'pqr' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pqr')}
+        >
+          <FileText size={18} /> Mis PQR
         </button>
         <button
           className={`tab-btn ${activeTab === 'profile' ? 'active' : ''}`}
@@ -380,6 +441,94 @@ export default function ClientDashboard() {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          PESTAÑA: MIS PQR
+         ========================================================================= */}
+      {activeTab === 'pqr' && (
+        <div className="tab-content">
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="profile-edit-card">
+              <h3 className="text-xl font-bold text-white mb-4">Radicar nueva solicitud</h3>
+              <form onSubmit={handleCreatePQR} className="auth-form">
+                <div className="form-group">
+                  <label className="input-label">Tipo de solicitud</label>
+                  <select
+                    className="custom-input"
+                    value={pqrForm.tipo}
+                    onChange={(e) => setPqrForm({ ...pqrForm, tipo: e.target.value })}
+                  >
+                    <option value="Queja">Queja</option>
+                    <option value="Reclamo">Reclamo</option>
+                    <option value="Petición">Petición</option>
+                    <option value="Sugerencia">Sugerencia</option>
+                  </select>
+                </div>
+
+                <Input
+                  label="Asunto"
+                  value={pqrForm.asunto}
+                  onChange={(e) => setPqrForm({ ...pqrForm, asunto: e.target.value })}
+                  placeholder="Ej. Problema con la entrega o la factura"
+                  required
+                />
+
+                <div className="form-group">
+                  <label className="input-label">Descripción</label>
+                  <textarea
+                    className="custom-input"
+                    rows={5}
+                    value={pqrForm.descripcion}
+                    onChange={(e) => setPqrForm({ ...pqrForm, descripcion: e.target.value })}
+                    placeholder="Describe tu caso con el mayor detalle posible..."
+                  />
+                </div>
+
+                <Button type="submit" variant="primary" fullWidth isLoading={pqrSubmitting}>
+                  {pqrSubmitting ? 'Enviando...' : 'Enviar PQR'}
+                </Button>
+              </form>
+            </div>
+
+            <div className="profile-edit-card">
+              <h3 className="text-xl font-bold text-white mb-4">Historial de PQR</h3>
+              {myPqrList.length === 0 ? (
+                <div className="empty-orders-box small">
+                  <FileText size={44} className="gold-icon mb-3" />
+                  <h4>No tienes PQR registradas</h4>
+                  <p>Cuando envíes una solicitud, aparecerá aquí con su estado y respuesta.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {myPqrList.map((pqr) => (
+                    <div key={pqr.id} className="order-summary-card" style={{ padding: '16px' }}>
+                      <div className="order-card-header">
+                        <div>
+                          <span className="order-number-title">{pqr.radicado}</span>
+                          <div className="order-date-text">{pqr.tipo}</div>
+                        </div>
+                        <Badge variant={pqr.estado === 'Respondida' || pqr.estado === 'Cerrada' ? 'success' : pqr.estado === 'En Proceso' ? 'info' : 'warning'}>
+                          {pqr.estado}
+                        </Badge>
+                      </div>
+                      <div className="mt-3">
+                        <strong>{pqr.asunto}</strong>
+                        <p className="text-slate-300 mt-2">{pqr.descripcion}</p>
+                        {pqr.respuesta && (
+                          <div className="mt-3 p-3 rounded-lg bg-slate-800/80 border border-slate-700">
+                            <div className="text-xs uppercase tracking-wide text-amber-300 mb-1">Respuesta</div>
+                            <p className="text-slate-200">{pqr.respuesta}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

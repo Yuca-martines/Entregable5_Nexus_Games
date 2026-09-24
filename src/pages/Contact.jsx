@@ -1,19 +1,65 @@
 import { useState } from 'react';
 import { Send, Headphones, Mail, HelpCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { pqrAPI } from '../services/api';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 
 export default function Contact() {
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    name: user?.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : '',
+    email: user?.email || '',
+    subject: '',
+    message: '',
+    tipo: 'Queja'
+  });
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSent(true);
-    setTimeout(() => {
-      setSent(false);
-      setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 4000);
+    setError('');
+
+    if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
+      setError('Completa nombre, correo, asunto y descripción para radicar tu PQR.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        cliente_nombre: formData.name.trim(),
+        cliente_email: formData.email.trim(),
+        cliente_telefono: user?.telefono || '',
+        tipo: formData.tipo || 'Queja',
+        asunto: formData.subject.trim(),
+        descripcion: formData.message.trim()
+      };
+
+      const res = await pqrAPI.create(payload);
+      if (!res?.success) {
+        throw new Error(res?.message || 'No se pudo radicar la PQR.');
+      }
+
+      setSent(true);
+      setFormData({
+        name: user?.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : '',
+        email: user?.email || '',
+        subject: '',
+        message: '',
+        tipo: 'Queja'
+      });
+    } catch (err) {
+      setError(err.message || 'No se pudo enviar tu solicitud. Intenta de nuevo.');
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => {
+        setSent(false);
+      }, 4000);
+    }
   };
 
   return (
@@ -45,9 +91,30 @@ export default function Contact() {
         <form className="contact-form" onSubmit={handleSubmit}>
           {sent && (
             <div className="auth-alert auth-alert-success mb-4">
-              ¡Mensaje enviado con éxito! Nuestro soporte revisará tu consulta.
+              ¡PQR radicada con éxito! Nuestro equipo la revisará y aparecerá en el panel administrativo.
             </div>
           )}
+
+          {error && (
+            <div className="auth-alert auth-alert-error mb-4">
+              {error}
+            </div>
+          )}
+
+          <div className="form-group">
+            <label htmlFor="tipo" className="input-label">Tipo de solicitud</label>
+            <select
+              id="tipo"
+              className="custom-input"
+              value={formData.tipo}
+              onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+            >
+              <option value="Queja">Queja</option>
+              <option value="Reclamo">Reclamo</option>
+              <option value="Petición">Petición</option>
+              <option value="Sugerencia">Sugerencia</option>
+            </select>
+          </div>
 
           <Input
             label="Nombre Completo"
@@ -78,7 +145,7 @@ export default function Contact() {
           />
 
           <div className="form-group">
-            <label htmlFor="message" className="input-label">Mensaje</label>
+            <label htmlFor="message" className="input-label">Descripción</label>
             <textarea
               id="message"
               rows={4}
@@ -90,8 +157,8 @@ export default function Contact() {
             ></textarea>
           </div>
 
-          <Button type="submit" variant="primary" fullWidth icon={Send}>
-            Enviar Mensaje a Soporte
+          <Button type="submit" variant="primary" fullWidth icon={Send} isLoading={isSubmitting}>
+            {isSubmitting ? 'Enviando...' : 'Enviar PQR a Soporte'}
           </Button>
         </form>
       </div>
