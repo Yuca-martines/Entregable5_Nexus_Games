@@ -1177,6 +1177,7 @@ main {
   position: sticky;
   top: 0;
   left: 0;
+  align-self: flex-start;
   background: linear-gradient(180deg, #0D1017 0%, #090B0F 100%);
   border-right: 1px solid rgba(148, 163, 184, 0.12);
   display: flex;
