@@ -6,10 +6,12 @@ export const getAllServices = async (req, res) => {
     const { estado } = req.query;
     let sql = 'SELECT * FROM servicios WHERE 1=1';
     const params = [];
+    let paramIndex = 1;
 
     if (estado) {
-      sql += ' AND estado = ?';
+      sql += ` AND estado = $${paramIndex}`;
       params.push(estado);
+      paramIndex++;
     }
 
     sql += ' ORDER BY id ASC';
@@ -33,7 +35,7 @@ export const getAllServices = async (req, res) => {
 export const getServiceById = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await get('SELECT * FROM servicios WHERE id = ?', [id]);
+    const service = await get('SELECT * FROM servicios WHERE id = $1', [id]);
     if (!service) {
       return res.status(404).json({
         success: false,
@@ -65,7 +67,7 @@ export const createService = async (req, res) => {
 
     const result = await run(
       `INSERT INTO servicios (nombre, descripcion, precio, duracion_estimada, icono, estado)
-       VALUES (?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
       [
         nombre.trim(),
         descripcion.trim(),
@@ -96,7 +98,7 @@ export const updateService = async (req, res) => {
     const { id } = req.params;
     const { nombre, descripcion, precio, duracion_estimada, icono, estado } = req.body;
 
-    const current = await get('SELECT * FROM servicios WHERE id = ?', [id]);
+    const current = await get('SELECT * FROM servicios WHERE id = $1', [id]);
     if (!current) {
       return res.status(404).json({
         success: false,
@@ -106,8 +108,8 @@ export const updateService = async (req, res) => {
 
     await run(
       `UPDATE servicios 
-       SET nombre = ?, descripcion = ?, precio = ?, duracion_estimada = ?, icono = ?, estado = ?
-       WHERE id = ?`,
+       SET nombre = $1, descripcion = $2, precio = $3, duracion_estimada = $4, icono = $5, estado = $6
+       WHERE id = $7`,
       [
         nombre ? nombre.trim() : current.nombre,
         descripcion ? descripcion.trim() : current.descripcion,
@@ -135,7 +137,7 @@ export const updateService = async (req, res) => {
 export const deleteService = async (req, res) => {
   try {
     const { id } = req.params;
-    const current = await get('SELECT id FROM servicios WHERE id = ?', [id]);
+    const current = await get('SELECT id FROM servicios WHERE id = $1', [id]);
     if (!current) {
       return res.status(404).json({
         success: false,
@@ -143,7 +145,7 @@ export const deleteService = async (req, res) => {
       });
     }
 
-    await run('DELETE FROM servicios WHERE id = ?', [id]);
+    await run('DELETE FROM servicios WHERE id = $1', [id]);
     return res.status(200).json({
       success: true,
       message: 'Servicio eliminado correctamente.'

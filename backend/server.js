@@ -68,7 +68,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`=======================================================`);
   console.log(`🚀 SERVIDOR BACKEND ACTIVO EN: http://localhost:${PORT}`);
-  console.log(`📦 Base de Datos SQL: SQLite (Lista para Entrega)`);
+  console.log(`🐘 Base de Datos: PostgreSQL`);
   console.log(`🔑 Autenticación: JWT + Hashing Bcrypt`);
   console.log(`=======================================================`);
 });

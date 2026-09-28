@@ -14,21 +14,25 @@ export const getAllUsers = async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
+    let paramIndex = 1;
 
     if (search) {
-      sql += ` AND (u.nombre LIKE ? OR u.apellido LIKE ? OR u.email LIKE ? OR u.numero_documento LIKE ?)`;
+      sql += ` AND (u.nombre ILIKE $${paramIndex} OR u.apellido ILIKE $${paramIndex + 1} OR u.email ILIKE $${paramIndex + 2} OR u.numero_documento ILIKE $${paramIndex + 3})`;
       const term = `%${search}%`;
       params.push(term, term, term, term);
+      paramIndex += 4;
     }
 
     if (rol_id) {
-      sql += ` AND u.rol_id = ?`;
+      sql += ` AND u.rol_id = $${paramIndex}`;
       params.push(rol_id);
+      paramIndex++;
     }
 
     if (estado) {
-      sql += ` AND u.estado = ?`;
+      sql += ` AND u.estado = $${paramIndex}`;
       params.push(estado);
+      paramIndex++;
     }
 
     sql += ` ORDER BY u.id DESC`;
@@ -63,7 +67,7 @@ export const getUserById = async (req, res) => {
               r.nombre as rol_nombre
        FROM usuarios u
        JOIN roles r ON u.rol_id = r.id
-       WHERE u.id = ?`,
+       WHERE u.id = $1`,
       [id]
     );
 
@@ -168,7 +172,7 @@ export const createUser = async (req, res) => {
       });
     }
 
-    const existingEmail = await get('SELECT id FROM usuarios WHERE email = ?', [email.toLowerCase().trim()]);
+    const existingEmail = await get('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase().trim()]);
     if (existingEmail) {
       return res.status(400).json({
         success: false,
@@ -176,7 +180,7 @@ export const createUser = async (req, res) => {
       });
     }
 
-    const existingDoc = await get('SELECT id FROM usuarios WHERE numero_documento = ?', [numero_documento.trim()]);
+    const existingDoc = await get('SELECT id FROM usuarios WHERE numero_documento = $1', [numero_documento.trim()]);
     if (existingDoc) {
       return res.status(400).json({
         success: false,
@@ -190,7 +194,7 @@ export const createUser = async (req, res) => {
 
     const result = await run(
       `INSERT INTO usuarios (nombre, apellido, tipo_documento, numero_documento, direccion, telefono, email, password, rol_id, estado)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
       [nombre.trim(), apellido.trim(), tipo_documento, numero_documento.trim(), direccion.trim(), telefono.trim(), email.toLowerCase().trim(), hashedPassword, finalRoleId, finalStatus]
     );
 
@@ -214,7 +218,7 @@ export const updateUser = async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido, tipo_documento, numero_documento, direccion, telefono, email, rol_id, estado, password } = req.body;
 
-    const user = await get('SELECT * FROM usuarios WHERE id = ?', [id]);
+    const user = await get('SELECT * FROM usuarios WHERE id = $1', [id]);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -260,7 +264,7 @@ export const updateUser = async (req, res) => {
 
     // Si cambia el correo, verificar duplicados
     if (email && email.toLowerCase().trim() !== user.email) {
-      const emailConflict = await get('SELECT id FROM usuarios WHERE email = ? AND id != ?', [email.toLowerCase().trim(), id]);
+      const emailConflict = await get('SELECT id FROM usuarios WHERE email = $1 AND id != $2', [email.toLowerCase().trim(), id]);
       if (emailConflict) {
         return res.status(400).json({
           success: false,
@@ -271,7 +275,7 @@ export const updateUser = async (req, res) => {
 
     // Si cambia el documento, verificar duplicados
     if (numero_documento && numero_documento.trim() !== user.numero_documento) {
-      const docConflict = await get('SELECT id FROM usuarios WHERE numero_documento = ? AND id != ?', [numero_documento.trim(), id]);
+      const docConflict = await get('SELECT id FROM usuarios WHERE numero_documento = $1 AND id != $2', [numero_documento.trim(), id]);
       if (docConflict) {
         return res.status(400).json({
           success: false,
@@ -300,10 +304,10 @@ export const updateUser = async (req, res) => {
 
     await run(
       `UPDATE usuarios 
-       SET nombre = ?, apellido = ?, tipo_documento = ?, numero_documento = ?, 
-           direccion = ?, telefono = ?, email = ?, password = ?, rol_id = ?, 
-           estado = ?, actualizado_en = CURRENT_TIMESTAMP
-       WHERE id = ?`,
+       SET nombre = $1, apellido = $2, tipo_documento = $3, numero_documento = $4, 
+           direccion = $5, telefono = $6, email = $7, password = $8, rol_id = $9, 
+           estado = $10, actualizado_en = NOW()
+       WHERE id = $11`,
       [
         nombre ? nombre.trim() : user.nombre,
         apellido ? apellido.trim() : user.apellido,
@@ -338,7 +342,7 @@ export const toggleUserStatus = async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
 
-    const user = await get('SELECT id, email, estado, rol_id FROM usuarios WHERE id = ?', [id]);
+    const user = await get('SELECT id, email, estado, rol_id FROM usuarios WHERE id = $1', [id]);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -356,7 +360,7 @@ export const toggleUserStatus = async (req, res) => {
 
     const newStatus = estado || (user.estado === 'Activo' ? 'Inactivo' : 'Activo');
 
-    await run('UPDATE usuarios SET estado = ?, actualizado_en = CURRENT_TIMESTAMP WHERE id = ?', [newStatus, id]);
+    await run('UPDATE usuarios SET estado = $1, actualizado_en = NOW() WHERE id = $2', [newStatus, id]);
 
     return res.status(200).json({
       success: true,
@@ -376,7 +380,7 @@ export const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const user = await get('SELECT id, email FROM usuarios WHERE id = ?', [id]);
+    const user = await get('SELECT id, email FROM usuarios WHERE id = $1', [id]);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -391,7 +395,7 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    await run('DELETE FROM usuarios WHERE id = ?', [id]);
+    await run('DELETE FROM usuarios WHERE id = $1', [id]);
 
     return res.status(200).json({
       success: true,

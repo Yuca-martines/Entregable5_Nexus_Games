@@ -106,7 +106,7 @@ export const register = async (req, res) => {
     }
 
     // Verificar si el correo ya existe
-    const existingEmail = await get('SELECT id FROM usuarios WHERE email = ?', [email.toLowerCase().trim()]);
+    const existingEmail = await get('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase().trim()]);
     if (existingEmail) {
       return res.status(400).json({
         success: false,
@@ -115,7 +115,7 @@ export const register = async (req, res) => {
     }
 
     // Verificar si el documento ya existe
-    const existingDoc = await get('SELECT id FROM usuarios WHERE numero_documento = ?', [numero_documento.trim()]);
+    const existingDoc = await get('SELECT id FROM usuarios WHERE numero_documento = $1', [numero_documento.trim()]);
     if (existingDoc) {
       return res.status(400).json({
         success: false,
@@ -130,10 +130,10 @@ export const register = async (req, res) => {
     // Asignar rol (por defecto 3 = Cliente, o el especificado si viene de un admin)
     const finalRoleId = rol_id ? parseInt(rol_id) : 3;
 
-    // Insertar en la base de datos SQL
+    // Insertar en la base de datos SQL (PostgreSQL usa RETURNING id)
     const result = await run(
       `INSERT INTO usuarios (nombre, apellido, tipo_documento, numero_documento, direccion, telefono, email, password, rol_id, estado)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'Activo')`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Activo') RETURNING id`,
       [
         nombre.trim(),
         apellido.trim(),
@@ -148,7 +148,7 @@ export const register = async (req, res) => {
     );
 
     // Obtener el rol asignado
-    const roleInfo = await get('SELECT nombre FROM roles WHERE id = ?', [finalRoleId]);
+    const roleInfo = await get('SELECT nombre FROM roles WHERE id = $1', [finalRoleId]);
 
     const newUser = {
       id: result.id,
@@ -203,7 +203,7 @@ export const login = async (req, res) => {
               u.direccion, u.telefono, u.email, u.password, u.rol_id, u.estado, r.nombre as rol_nombre
        FROM usuarios u
        JOIN roles r ON u.rol_id = r.id
-       WHERE u.email = ?`,
+       WHERE u.email = $1`,
       [cleanEmail]
     );
 
@@ -236,7 +236,7 @@ export const login = async (req, res) => {
       `SELECT p.codigo, p.nombre, p.modulo
        FROM permisos p
        JOIN rol_permisos rp ON p.id = rp.permiso_id
-       WHERE rp.rol_id = ?`,
+       WHERE rp.rol_id = $1`,
       [user.rol_id]
     );
 
@@ -305,7 +305,7 @@ export const recoverPassword = async (req, res) => {
       });
     }
 
-    const user = await get('SELECT id FROM usuarios WHERE email = ?', [email.toLowerCase().trim()]);
+    const user = await get('SELECT id FROM usuarios WHERE email = $1', [email.toLowerCase().trim()]);
     if (!user) {
       return res.status(404).json({
         success: false,

@@ -43,7 +43,7 @@ export const getDashboardStats = async (req, res) => {
     const totalProducts = await get('SELECT COUNT(*) as count FROM productos');
     const lowStockProducts = await get('SELECT COUNT(*) as count FROM productos WHERE stock <= 5');
     const totalServices = await get('SELECT COUNT(*) as count FROM servicios');
-    const totalOrders = await get('SELECT COUNT(*) as count, IFNULL(SUM(total), 0) as revenue FROM pedidos');
+    const totalOrders = await get('SELECT COUNT(*) as count, COALESCE(SUM(total), 0) as revenue FROM pedidos');
 
     return res.status(200).json({
       success: true,

@@ -13,36 +13,44 @@ export const getAllProducts = async (req, res) => {
       WHERE 1=1
     `;
     const params = [];
+    let paramIndex = 1;
 
     if (search) {
-      sql += ` AND (p.nombre LIKE ? OR p.descripcion LIKE ? OR p.plataforma LIKE ?)`;
+      sql += ` AND (p.nombre ILIKE $${paramIndex} OR p.descripcion ILIKE $${paramIndex + 1} OR p.plataforma ILIKE $${paramIndex + 2})`;
       const term = `%${search}%`;
       params.push(term, term, term);
+      paramIndex += 3;
     }
 
     if (categoria_id) {
-      sql += ` AND p.categoria_id = ?`;
+      sql += ` AND p.categoria_id = $${paramIndex}`;
       params.push(categoria_id);
+      paramIndex++;
     }
 
     if (destacado !== undefined && destacado !== '') {
-      sql += ` AND p.destacado = ?`;
-      params.push(parseInt(destacado));
+      // PostgreSQL usa TRUE/FALSE para booleanos
+      sql += ` AND p.destacado = $${paramIndex}`;
+      params.push(destacado === '1' || destacado === 'true');
+      paramIndex++;
     }
 
     if (estado) {
-      sql += ` AND p.estado = ?`;
+      sql += ` AND p.estado = $${paramIndex}`;
       params.push(estado);
+      paramIndex++;
     }
 
     if (minPrice) {
-      sql += ` AND p.precio >= ?`;
+      sql += ` AND p.precio >= $${paramIndex}`;
       params.push(parseFloat(minPrice));
+      paramIndex++;
     }
 
     if (maxPrice) {
-      sql += ` AND p.precio <= ?`;
+      sql += ` AND p.precio <= $${paramIndex}`;
       params.push(parseFloat(maxPrice));
+      paramIndex++;
     }
 
     sql += ` ORDER BY p.id DESC`;
@@ -70,7 +78,7 @@ export const getProductById = async (req, res) => {
       `SELECT p.*, c.nombre as categoria_nombre
        FROM productos p
        JOIN categorias c ON p.categoria_id = c.id
-       WHERE p.id = ?`,
+       WHERE p.id = $1`,
       [id]
     );
 
@@ -109,7 +117,7 @@ export const createProduct = async (req, res) => {
 
     const result = await run(
       `INSERT INTO productos (nombre, descripcion, precio, stock, categoria_id, plataforma, imagen, destacado, estado)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
       [
         nombre.trim(),
         descripcion.trim(),
@@ -118,7 +126,7 @@ export const createProduct = async (req, res) => {
         parseInt(categoria_id),
         plataforma ? plataforma.trim() : 'Multiplataforma',
         defaultImg.trim(),
-        destacado ? 1 : 0,
+        destacado ? true : false,
         estado || 'Activo'
       ]
     );
@@ -143,7 +151,7 @@ export const updateProduct = async (req, res) => {
     const { id } = req.params;
     const { nombre, descripcion, precio, stock, categoria_id, plataforma, imagen, destacado, estado } = req.body;
 
-    const current = await get('SELECT * FROM productos WHERE id = ?', [id]);
+    const current = await get('SELECT * FROM productos WHERE id = $1', [id]);
     if (!current) {
       return res.status(404).json({
         success: false,
@@ -153,9 +161,9 @@ export const updateProduct = async (req, res) => {
 
     await run(
       `UPDATE productos 
-       SET nombre = ?, descripcion = ?, precio = ?, stock = ?, categoria_id = ?, 
-           plataforma = ?, imagen = ?, destacado = ?, estado = ?, actualizado_en = CURRENT_TIMESTAMP
-       WHERE id = ?`,
+       SET nombre = $1, descripcion = $2, precio = $3, stock = $4, categoria_id = $5, 
+           plataforma = $6, imagen = $7, destacado = $8, estado = $9, actualizado_en = NOW()
+       WHERE id = $10`,
       [
         nombre ? nombre.trim() : current.nombre,
         descripcion ? descripcion.trim() : current.descripcion,
@@ -164,7 +172,7 @@ export const updateProduct = async (req, res) => {
         categoria_id !== undefined ? parseInt(categoria_id) : current.categoria_id,
         plataforma !== undefined ? plataforma : current.plataforma,
         imagen !== undefined ? imagen : current.imagen,
-        destacado !== undefined ? (destacado ? 1 : 0) : current.destacado,
+        destacado !== undefined ? Boolean(destacado) : current.destacado,
         estado || current.estado,
         id
       ]
@@ -189,7 +197,7 @@ export const updateStock = async (req, res) => {
     const { id } = req.params;
     const { stock, delta } = req.body;
 
-    const product = await get('SELECT id, nombre, stock FROM productos WHERE id = ?', [id]);
+    const product = await get('SELECT id, nombre, stock FROM productos WHERE id = $1', [id]);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -204,7 +212,8 @@ export const updateStock = async (req, res) => {
       newStock = Math.max(0, product.stock + parseInt(delta));
     }
 
-    await run('UPDATE productos SET stock = ?, actualizado_en = CURRENT_TIMESTAMP WHERE id = ?', [newStock, id]);
+    // GREATEST(0, value) es el equivalente PostgreSQL de MAX(0, value) en contexto de columna
+    await run('UPDATE productos SET stock = $1, actualizado_en = NOW() WHERE id = $2', [newStock, id]);
 
     return res.status(200).json({
       success: true,
@@ -225,7 +234,7 @@ export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const product = await get('SELECT id FROM productos WHERE id = ?', [id]);
+    const product = await get('SELECT id FROM productos WHERE id = $1', [id]);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -233,7 +242,7 @@ export const deleteProduct = async (req, res) => {
       });
     }
 
-    await run('DELETE FROM productos WHERE id = ?', [id]);
+    await run('DELETE FROM productos WHERE id = $1', [id]);
 
     return res.status(200).json({
       success: true,

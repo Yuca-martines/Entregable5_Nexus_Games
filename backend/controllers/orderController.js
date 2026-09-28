@@ -13,10 +13,10 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Crear el registro de pedido
+    // Crear el registro de pedido (RETURNING id para obtener el id generado)
     const orderResult = await run(
       `INSERT INTO pedidos (usuario_id, total, metodo_pago, estado, direccion_envio)
-       VALUES (?, ?, ?, 'Completado', ?)`,
+       VALUES ($1, $2, $3, 'Completado', $4) RETURNING id`,
       [
         usuario_id,
         parseFloat(total),
@@ -36,13 +36,13 @@ export const createOrder = async (req, res) => {
 
       await run(
         `INSERT INTO pedido_detalles (pedido_id, producto_id, cantidad, precio_unitario, subtotal)
-         VALUES (?, ?, ?, ?, ?)`,
+         VALUES ($1, $2, $3, $4, $5)`,
         [pedidoId, prodId, cant, precio, subtotal]
       );
 
-      // Descontar del inventario
+      // Descontar del inventario (GREATEST es el equivalente PostgreSQL)
       await run(
-        `UPDATE productos SET stock = MAX(0, stock - ?) WHERE id = ?`,
+        `UPDATE productos SET stock = GREATEST(0, stock - $1) WHERE id = $2`,
         [cant, prodId]
       );
     }
@@ -67,7 +67,7 @@ export const getMyOrders = async (req, res) => {
     const usuario_id = req.user.id;
 
     const orders = await query(
-      `SELECT * FROM pedidos WHERE usuario_id = ? ORDER BY id DESC`,
+      `SELECT * FROM pedidos WHERE usuario_id = $1 ORDER BY id DESC`,
       [usuario_id]
     );
 
@@ -77,7 +77,7 @@ export const getMyOrders = async (req, res) => {
           `SELECT pd.*, p.nombre as producto_nombre, p.imagen as producto_imagen
            FROM pedido_detalles pd
            JOIN productos p ON pd.producto_id = p.id
-           WHERE pd.pedido_id = ?`,
+           WHERE pd.pedido_id = $1`,
           [o.id]
         );
         return {
