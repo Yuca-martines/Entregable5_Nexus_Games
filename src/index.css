@@ -1161,7 +1161,7 @@ main {
 .dashboard-layout {
   display: flex;
   width: 100%;
-  min-height: 100vh;
+  align-items: stretch;
   background: var(--bg-main, #0A0B0E);
   position: relative;
 }
@@ -1173,12 +1173,8 @@ main {
   width: 290px;
   min-width: 290px;
   max-width: 290px;
-  height: 100vh;
-  min-height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
+  flex-shrink: 0;
+  position: static;
   background: linear-gradient(180deg, #0D1017 0%, #090B0F 100%);
   border-right: 1px solid rgba(148, 163, 184, 0.12);
   display: flex;
@@ -1593,8 +1589,8 @@ main {
    ========================================================================= */
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
   width: 100%;
+  align-items: stretch;
   background: var(--bg-main, #0A0B0E);
   position: relative;
   overflow-x: hidden;
@@ -1604,8 +1600,6 @@ main {
 .dashboard-content-area {
   flex: 1;
   min-width: 0;
-  min-height: 100vh;
-  margin-left: 290px;
   display: flex;
   flex-direction: column;
   background: var(--bg-main, #0A0B0E);
