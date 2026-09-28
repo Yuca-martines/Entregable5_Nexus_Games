@@ -1162,7 +1162,6 @@ main {
   display: flex;
   width: 100%;
   min-height: 100vh;
-  align-items: stretch;
   background: var(--bg-main, #0A0B0E);
   position: relative;
 }
@@ -1174,11 +1173,12 @@ main {
   width: 290px;
   min-width: 290px;
   max-width: 290px;
+  height: 100vh;
   min-height: 100vh;
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
-  align-self: stretch;
+  bottom: 0;
   background: linear-gradient(180deg, #0D1017 0%, #090B0F 100%);
   border-right: 1px solid rgba(148, 163, 184, 0.12);
   display: flex;
@@ -1549,6 +1549,12 @@ main {
     transform: translateX(0);
   }
 
+  .dashboard-workspace,
+  .dashboard-content-area {
+    margin-left: 0;
+    width: auto;
+  }
+
   .sidebar-close-btn {
     display: flex;
   }
@@ -1599,6 +1605,7 @@ main {
   flex: 1;
   min-width: 0;
   min-height: 100vh;
+  margin-left: 290px;
   display: flex;
   flex-direction: column;
   background: var(--bg-main, #0A0B0E);
